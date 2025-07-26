@@ -29,21 +29,24 @@
 ## Project Structure
 
 
+```
 threatelligence/
 ├── backend/
-│   ├── app.py                # FastAPI app
-│   ├── models.py, crud.py    # Database logic and models
-│   ├── rss_fetcher.py        # RSS engine
-│   ├── services/             # IOC processor & AI summarizer
-│   ├── alembic/              # Database migrations
+│   ├── app.py                  # FastAPI backend
+│   ├── crud.py, models.py      # Database models
+│   ├── rss_fetcher.py          # RSS extraction engine
+│   ├── services/               # IOC processor & AI summarizer
+│   ├── alembic/                # DB migrations
 ├── frontend/
-│   └── src/
-│       ├── components/       # Dashboard, Feeds, IOCs
-│       └── api/client.js     # API client
+│   ├── src/
+│   │   ├── components/         # Dashboard, Feeds, IOCs
+│   │   └── api/client.js       # Axios config
+│   ├── .env.example
 ├── scripts/
-│   └── init-db.sh, fetch-articles.sh
-├── docker-compose.yml
+│   ├── fetch-articles.sh       # CLI triggers
+│   └── init-db.sh
 └── README.md
+```
 
 
 ## Prerequisites
