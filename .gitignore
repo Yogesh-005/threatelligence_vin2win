@@ -6,7 +6,6 @@
 .env.development
 .env.test
 .env.production
-.env.example
 *.env
 
 # Python Backend
