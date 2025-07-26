@@ -293,8 +293,4 @@ This platform demonstrates the power of combining traditional RSS aggregation wi
 
 ---
 
-## 📞 Contact
-
-For questions, suggestions, or collaboration opportunities, please reach out to the development team.
-
 **Happy Threat Hunting! 🔍🛡️**
