@@ -1,6 +1,15 @@
 # 🛡️ Threatelligence 
 
-Threatelligence is an intelligent, full-stack **RSS Threat Intelligence Platform** that automatically aggregates news feeds, extracts IOCs (Indicators of Compromise), performs risk scoring, and generates AI-powered threat summaries — all within a clean and interactive dashboard.
+## 🏆 About This Submission
+
+**Threatelligence** represents a comprehensive approach to automated threat intelligence gathering and analysis. By combining RSS feed aggregation, intelligent IOC extraction, risk assessment, and AI-powered summarization, this platform empowers cybersecurity professionals with real-time threat visibility and actionable intelligence.
+
+The system is designed to be:
+- **Scalable**: Handle multiple RSS feeds and high article volumes
+- **Intelligent**: AI-powered analysis and risk scoring
+- **User-Friendly**: Clean, intuitive dashboard interface
+- **Extensible**: Modular architecture for easy feature additions
+- **Production-Ready**: Comprehensive error handling and monitoring
 
 > 🚀 **Final Submission for Societe Generale Hackathon**  
 > 🧑‍💻 **Team: vin2win**  
@@ -262,19 +271,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[SQLAlchemy](https://sqlalchemy.org/)** for database ORM
 - **[feedparser](https://feedparser.readthedocs.io/)** for RSS parsing
 - **Societe Generale** for hosting this innovative hackathon
-
----
-
-## 🏆 About This Submission
-
-**Threatelligence** represents a comprehensive approach to automated threat intelligence gathering and analysis. By combining RSS feed aggregation, intelligent IOC extraction, risk assessment, and AI-powered summarization, this platform empowers cybersecurity professionals with real-time threat visibility and actionable intelligence.
-
-The system is designed to be:
-- **Scalable**: Handle multiple RSS feeds and high article volumes
-- **Intelligent**: AI-powered analysis and risk scoring
-- **User-Friendly**: Clean, intuitive dashboard interface
-- **Extensible**: Modular architecture for easy feature additions
-- **Production-Ready**: Comprehensive error handling and monitoring
 
 ---
 
