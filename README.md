@@ -1,7 +1,3 @@
-Here's a complete and professional `README.md` file for your **Threatelligence** project — tailored for your **Societe Generale Hackathon final submission**, with full setup, team credits, and structure:
-
----
-
 ```markdown
 # 🛡️ Threatelligence - Final Submission (Societe Generale Hackathon)
 
