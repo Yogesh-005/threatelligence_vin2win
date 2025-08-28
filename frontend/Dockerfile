@@ -3,13 +3,12 @@ FROM node:18 AS build
 
 WORKDIR /app
 
-# Copy package.json + package-lock.json
+# Copy package.json first
 COPY package*.json ./
 
-# Install dependencies
 RUN npm install
 
-# Copy rest of project (src + public)
+# Copy the rest of the frontend code
 COPY . .
 
 # Build React app
@@ -18,7 +17,7 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Copy build output to Nginx HTML dir
+# Copy built files to nginx default folder
 COPY --from=build /app/build /usr/share/nginx/html
 
 EXPOSE 80
