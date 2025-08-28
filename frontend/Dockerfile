@@ -5,13 +5,13 @@ FROM node:16-alpine
 WORKDIR /app
 
 # Copy package.json and package-lock.json from the FINAL/frontend directory
-COPY FINAL/frontend/package*.json ./
+COPY frontend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the frontend code from FINAL/frontend (including public folder)
-COPY FINAL/frontend/ ./
+COPY frontend/ ./
 
 # Verify public/index.html exists (debugging step)
 RUN ls -la public/
