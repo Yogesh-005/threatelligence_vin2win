@@ -1,23 +1,24 @@
-# Build stage
+# Stage 1: Build React app
 FROM node:18 AS build
 
 WORKDIR /app
 
-# Copy package.json first
-COPY package*.json ./
+# Copy only frontend package.json first (for caching)
+COPY frontend/package*.json ./
 
+# Install dependencies
 RUN npm install
 
 # Copy the rest of the frontend code
-COPY . .
+COPY frontend/ ./
 
 # Build React app
 RUN npm run build
 
-# Production stage
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Copy built files to nginx default folder
+# Copy React build into nginx html folder
 COPY --from=build /app/build /usr/share/nginx/html
 
 EXPOSE 80
