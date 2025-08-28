@@ -1,49 +1,6 @@
-# Add this to your routes.py or app.py
-
-@app.post("/api/seed")
-async def run_seed_script():
-    """Run the seed script to populate initial data"""
-    try:
-        import subprocess
-        import os
-        
-        # Change to the correct directory
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        # Run the seed script
-        result = subprocess.run(
-            ['python', 'seed_feeds.py'], 
-            cwd=script_dir,
-            capture_output=True, 
-            text=True,
-            timeout=60  # 60 second timeout
-        )
-        
-        if result.returncode == 0:
-            return {
-                "status": "success",
-                "message": "Seed script executed successfully",
-                "output": result.stdout
-            }
-        else:
-            return {
-                "status": "error",
-                "message": "Seed script failed",
-                "error": result.stderr
-            }
-            
-    except subprocess.TimeoutExpired:
-        return {
-            "status": "error", 
-            "message": "Seed script timed out"
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to run seed script: {str(e)}"
-        }
-
 # backend/routes.py
+import subprocess
+import sys
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, logger
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -576,3 +533,137 @@ def bulk_summarize_articles(
         "articles_queued": len(articles_to_process),
         "status": "processing"
     }
+@router.post("/seed")
+def run_seed_script(db: Session = Depends(get_db)):
+    """Run the seed script to populate initial RSS feeds"""
+    try:
+        import os
+        
+        # Get the current directory (should be backend/)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Look for seed_feeds.py in the current directory
+        seed_file = os.path.join(script_dir, "seed_feeds.py")
+        
+        if not os.path.exists(seed_file):
+            # Try parent directory
+            parent_dir = os.path.dirname(script_dir)
+            seed_file = os.path.join(parent_dir, "seed_feeds.py")
+        
+        if not os.path.exists(seed_file):
+            return {
+                "status": "error",
+                "message": "seed_feeds.py not found",
+                "searched_paths": [
+                    os.path.join(script_dir, "seed_feeds.py"),
+                    os.path.join(parent_dir, "seed_feeds.py")
+                ]
+            }
+        
+        # Run the seed script
+        result = subprocess.run(
+            [sys.executable, "seed_feeds.py"], 
+            cwd=os.path.dirname(seed_file),
+            capture_output=True, 
+            text=True,
+            timeout=120  # 2 minute timeout
+        )
+        
+        if result.returncode == 0:
+            # Count feeds after seeding
+            feeds_count = len(get_feeds(db))
+            
+            return {
+                "status": "success",
+                "message": "Seed script executed successfully",
+                "output": result.stdout,
+                "feeds_created": feeds_count,
+                "next_steps": [
+                    "Use POST /api/feeds/refresh to fetch articles",
+                    "Check GET /api/feeds to see available feeds",
+                    "Visit dashboard to monitor progress"
+                ]
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Seed script failed",
+                "error": result.stderr,
+                "output": result.stdout,
+                "return_code": result.returncode
+            }
+            
+    except subprocess.TimeoutExpired:
+        return {
+            "status": "error", 
+            "message": "Seed script timed out (exceeded 2 minutes)"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to run seed script: {str(e)}",
+            "exception_type": type(e).__name__
+        }
+
+@router.get("/seed/status")
+def get_seed_status(db: Session = Depends(get_db)):
+    """Check if database has been seeded with initial feeds"""
+    feeds = get_feeds(db)
+    articles_count = get_articles_count(db)
+    
+    return {
+        "feeds_count": len(feeds),
+        "articles_count": articles_count,
+        "is_seeded": len(feeds) > 0,
+        "available_feeds": [{"name": feed.name, "url": feed.url, "active": feed.active} for feed in feeds],
+        "recommendations": {
+            "needs_seeding": len(feeds) == 0,
+            "needs_articles": articles_count == 0,
+            "actions": [
+                "Run POST /api/seed if no feeds exist",
+                "Run POST /api/feeds/refresh to fetch articles",
+                "Check GET /api/dashboard/stats for overview"
+            ]
+        }
+    }
+
+@router.post("/initialize")
+def initialize_system(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Complete system initialization: seed feeds + fetch articles"""
+    try:
+        # Check if already initialized
+        feeds = get_feeds(db)
+        if len(feeds) == 0:
+            # Run seed script first
+            seed_result = run_seed_script(db)
+            if seed_result["status"] != "success":
+                return {
+                    "status": "error",
+                    "message": "Failed to seed feeds",
+                    "details": seed_result
+                }
+        
+        # Start background article fetching
+        background_tasks.add_task(fetch_and_store_articles)
+        
+        return {
+            "status": "success",
+            "message": "System initialization started",
+            "feeds_count": len(get_feeds(db)),
+            "actions_taken": [
+                "Database seeded with initial feeds" if len(feeds) == 0 else "Feeds already exist",
+                "Background article fetching started",
+                "IOC processing will begin automatically"
+            ],
+            "next_steps": [
+                "Monitor GET /api/status/processing for progress",
+                "Check GET /api/articles for new articles",
+                "Visit frontend dashboard for full overview"
+            ]
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"System initialization failed: {str(e)}"
+        }
