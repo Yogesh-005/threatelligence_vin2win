@@ -1,30 +1,26 @@
-# Build stage
-FROM node:16-alpine as build
+# Use Node.js official image
+FROM node:16-alpine
 
+# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build the app
+# Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Install serve to serve the build
+RUN npm install -g serve
 
-# Copy built app to nginx
-COPY --from=build /app/build /usr/share/nginx/html
+# Expose port (Railway will automatically set PORT)
+EXPOSE 3000
 
-# Copy nginx config (optional)
-COPY nginx.conf /etc/nginx/nginx.conf 2>/dev/null || true
-
-# Expose port
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["serve", "-s", "build", "-l", "3000"]
