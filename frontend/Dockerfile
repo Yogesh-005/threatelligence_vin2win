@@ -19,8 +19,8 @@ RUN npm run build
 # Install serve to serve the build
 RUN npm install -g serve
 
-# Expose port (Railway will automatically set PORT)
-EXPOSE 3000
+# Expose port (Railway will set PORT environment variable)
+EXPOSE $PORT
 
-# Start the application
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Start the application on 0.0.0.0 and use Railway's PORT
+CMD ["sh", "-c", "serve -s build -l ${PORT:-3000} -n"]

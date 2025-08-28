@@ -1,0 +1,11 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "serve -s build -l $PORT -n -H 0.0.0.0"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "never"
+
+[[services]]
+name = "threatelligence-frontend"
