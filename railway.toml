@@ -1,0 +1,11 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "FINAL/frontend/Dockerfile"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+[environments.production]
+variables = { NODE_ENV = "production" }
