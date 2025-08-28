@@ -1,28 +1,25 @@
-# Use Node.js for frontend
+# Build stage
 FROM node:18 AS build
 
 WORKDIR /app
 
-# Copy package.json first (better caching)
+# Copy package.json + package-lock.json
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy rest of the project
+# Copy rest of project (src + public)
 COPY . .
 
-# Build production-ready frontend
+# Build React app
 RUN npm run build
 
-# Serve with a lightweight webserver
+# Production stage
 FROM nginx:alpine
 
-# Copy built frontend files to Nginx
+# Copy build output to Nginx HTML dir
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose port
 EXPOSE 80
-
-# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
