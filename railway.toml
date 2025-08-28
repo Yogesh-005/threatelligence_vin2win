@@ -1,11 +1,11 @@
 [build]
-builder = "dockerfile"
-dockerfilePath = "FINAL/frontend/Dockerfile"
+builder = "nixpacks"
 
 [deploy]
 startCommand = "npm start"
 healthcheckPath = "/"
 healthcheckTimeout = 300
+restartPolicyType = "never"
 
-[environments.production]
-variables = { NODE_ENV = "production" }
+[[services]]
+name = "threatelligence-frontend"

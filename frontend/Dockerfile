@@ -1,23 +1,30 @@
-# Use Node.js base image
-FROM node:16-alpine
+# Build stage
+FROM node:16-alpine as build
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json from the FINAL/frontend directory
-COPY frontend/package*.json ./
+# Copy package files
+COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --only=production
 
-# Copy the rest of the frontend code from FINAL/frontend (including public folder)
-COPY frontend/ ./
+# Copy source code
+COPY . .
 
-# Verify public/index.html exists (debugging step)
-RUN ls -la public/
+# Build the app
+RUN npm run build
 
-# Expose port 3000
-EXPOSE 3000
+# Production stage
+FROM nginx:alpine
 
-# Start the application
-CMD ["npm", "start"]
+# Copy built app to nginx
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Copy nginx config (optional)
+COPY nginx.conf /etc/nginx/nginx.conf 2>/dev/null || true
+
+# Expose port
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
