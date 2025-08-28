@@ -1,3 +1,48 @@
+# Add this to your routes.py or app.py
+
+@app.post("/api/seed")
+async def run_seed_script():
+    """Run the seed script to populate initial data"""
+    try:
+        import subprocess
+        import os
+        
+        # Change to the correct directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Run the seed script
+        result = subprocess.run(
+            ['python', 'seed_feeds.py'], 
+            cwd=script_dir,
+            capture_output=True, 
+            text=True,
+            timeout=60  # 60 second timeout
+        )
+        
+        if result.returncode == 0:
+            return {
+                "status": "success",
+                "message": "Seed script executed successfully",
+                "output": result.stdout
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Seed script failed",
+                "error": result.stderr
+            }
+            
+    except subprocess.TimeoutExpired:
+        return {
+            "status": "error", 
+            "message": "Seed script timed out"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to run seed script: {str(e)}"
+        }
+
 # backend/routes.py
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, logger
 from sqlalchemy.orm import Session
