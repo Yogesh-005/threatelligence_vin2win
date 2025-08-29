@@ -7,7 +7,7 @@
 *Final Submission for Societe Generale Hackathon 2025*  
 *Team: vin2win — Yogesh P, Bharathi R*
 
-## 🚀 Live Demo
+## Live Demo
 
 **Access the deployed application:** [https://threatelligence-frontend-production.up.railway.app/](https://threatelligence-frontend-production.up.railway.app/)
 
@@ -165,4 +165,5 @@ Threatelligence blends traditional threat feed aggregation with modern AI and au
 *Team: vin2win — Yogesh P (22BPS1044), Bharathi R (22BPS1010)*
 
 For questions or contributions, consult the API docs or repository guidelines. All code is MIT-licensed.  
+
 Happy threat hunting!
