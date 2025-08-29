@@ -201,13 +201,10 @@ def list_iocs(
     """Get IOCs with optional filtering"""
     return get_iocs(db, skip=skip, limit=limit, ioc_type=ioc_type, min_risk_score=min_risk_score)
 
-@router.get("/iocs/{ioc_id}", response_model=IOC)
-def get_ioc_details(ioc_id: int, db: Session = Depends(get_db)):
-    """Get detailed IOC information with enrichment data"""
-    ioc = get_ioc_by_id(db, ioc_id)
-    if not ioc:
-        raise HTTPException(status_code=404, detail="IOC not found")
-    return ioc
+@router.get("/iocs/stats", response_model=IOCStats)
+def get_ioc_stats_endpoint(db: Session = Depends(get_db)):
+    """Get IOC statistics"""
+    return get_ioc_stats(db)
 
 @router.get("/iocs/high-risk", response_model=List[IOC])
 def get_high_risk_iocs_endpoint(
@@ -218,10 +215,13 @@ def get_high_risk_iocs_endpoint(
     """Get high-risk IOCs for dashboard"""
     return get_high_risk_iocs(db, risk_threshold, limit)
 
-@router.get("/iocs/stats", response_model=IOCStats)
-def get_ioc_stats_endpoint(db: Session = Depends(get_db)):
-    """Get IOC statistics"""
-    return get_ioc_stats(db)
+@router.get("/iocs/{ioc_id}", response_model=IOC)
+def get_ioc_details(ioc_id: int, db: Session = Depends(get_db)):
+    """Get detailed IOC information with enrichment data"""
+    ioc = get_ioc_by_id(db, ioc_id)
+    if not ioc:
+        raise HTTPException(status_code=404, detail="IOC not found")
+    return ioc
 
 @router.post("/iocs/reprocess/{article_id}")
 def reprocess_article_iocs(

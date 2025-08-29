@@ -214,15 +214,10 @@ function FeedList() {
   const handleRefresh = async (feedId = null) => {
     setRefreshing(true);
     try {
-      if (feedId) {
-        // Refresh specific feed
-        await feedsAPI.refreshFeed(feedId);
-        alert('Feed refreshed successfully!');
-      } else {
-        // Refresh all feeds
-        await feedsAPI.refreshAllFeeds();
-        alert('All feeds refreshed successfully!');
-      }
+      // Backend supports refreshing all feeds via /feeds/refresh
+      // If a specific feed is requested, fall back to refreshing all for now
+      await feedsAPI.refreshFeeds();
+      alert(feedId ? 'Refresh triggered (all feeds)' : 'All feeds refreshed successfully!');
       await loadFeeds();
     } catch (error) {
       setError('Failed to refresh feeds');
