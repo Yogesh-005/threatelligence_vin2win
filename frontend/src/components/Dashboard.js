@@ -232,11 +232,12 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [threats, setThreats] = useState([]);
   const [overview, setOverview] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState({ stats: true, threats: true, overview: true });
   const [error, setError] = useState(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(24);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [systemStatus, setSystemStatus] = useState('unknown');
+  const [lastDataFetch, setLastDataFetch] = useState({ stats: null, threats: null, overview: null });
 
   const timeRanges = [
     { label: '1h', value: 1 },
@@ -249,35 +250,61 @@ function Dashboard() {
     loadDashboardData();
     checkSystemHealth();
     
-    // Auto-refresh every 5 minutes
+    // Auto-refresh every 15 minutes (reduced from 5 minutes)
     const interval = setInterval(() => {
       loadDashboardData();
       checkSystemHealth();
-    }, 5 * 60 * 1000);
+    }, 15 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [selectedTimeRange]);
 
   const loadDashboardData = async () => {
-    setLoading(true);
-    try {
-      const [statsResponse, threatsResponse, overviewResponse] = await Promise.all([
-        dashboardAPI.getStats(),
-        dashboardAPI.getRecentThreats(10, 25),
-        dashboardAPI.getThreatOverview(selectedTimeRange)
-      ]);
+    const now = Date.now();
+    const cacheTimeout = 2 * 60 * 1000; // 2 minutes cache
 
-      setStats(statsResponse.data);
-      setThreats(threatsResponse.data.threats);
-      setOverview(overviewResponse.data);
-      setLastRefresh(new Date());
-      setError(null);
-    } catch (error) {
-      setError('Failed to load dashboard data');
-      console.error('Dashboard loading error:', error);
-    } finally {
-      setLoading(false);
+    // Load stats with caching
+    if (!lastDataFetch.stats || (now - lastDataFetch.stats) > cacheTimeout) {
+      setLoading(prev => ({ ...prev, stats: true }));
+      try {
+        const response = await dashboardAPI.getStats();
+        setStats(response.data);
+        setLastDataFetch(prev => ({ ...prev, stats: now }));
+      } catch (error) {
+        console.error('Stats loading error:', error);
+      } finally {
+        setLoading(prev => ({ ...prev, stats: false }));
+      }
     }
+
+    // Load threats with caching
+    if (!lastDataFetch.threats || (now - lastDataFetch.threats) > cacheTimeout) {
+      setLoading(prev => ({ ...prev, threats: true }));
+      try {
+        const response = await dashboardAPI.getRecentThreats(10, 25);
+        setThreats(response.data.threats);
+        setLastDataFetch(prev => ({ ...prev, threats: now }));
+      } catch (error) {
+        console.error('Threats loading error:', error);
+      } finally {
+        setLoading(prev => ({ ...prev, threats: false }));
+      }
+    }
+
+    // Load overview (always refresh when time range changes)
+    setLoading(prev => ({ ...prev, overview: true }));
+    try {
+      const response = await dashboardAPI.getThreatOverview(selectedTimeRange);
+      setOverview(response.data);
+      setLastDataFetch(prev => ({ ...prev, overview: now }));
+    } catch (error) {
+      console.error('Overview loading error:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, overview: false }));
+    }
+
+    setLastRefresh(new Date());
+    setError(null);
   };
 
   const checkSystemHealth = async () => {
@@ -291,6 +318,8 @@ function Dashboard() {
   };
 
   const handleRefresh = () => {
+    // Clear cache and reload all data
+    setLastDataFetch({ stats: null, threats: null, overview: null });
     loadDashboardData();
     checkSystemHealth();
   };
@@ -322,7 +351,8 @@ function Dashboard() {
     }
   ];
 
-  if (loading && !stats) {
+  const isLoading = loading.stats && loading.threats && loading.overview && !stats;
+  if (isLoading) {
     return (
       <Container>
         <div style={{ textAlign: 'center', padding: '40px' }}>
@@ -341,8 +371,8 @@ function Dashboard() {
 
       <RefreshIndicator>
         <span>Last updated: {lastRefresh.toLocaleTimeString()}</span>
-        <Button onClick={handleRefresh} disabled={loading} style={{ padding: '4px 8px', fontSize: '12px' }}>
-          {loading ? <LoadingSpinner /> : 'Refresh'}
+        <Button onClick={handleRefresh} disabled={loading.stats || loading.threats || loading.overview} style={{ padding: '4px 8px', fontSize: '12px' }}>
+          {loading.stats || loading.threats || loading.overview ? <LoadingSpinner /> : 'Refresh'}
         </Button>
       </RefreshIndicator>
 
@@ -361,27 +391,27 @@ function Dashboard() {
       </QuickActions>
 
       {/* Overview Statistics */}
-      {stats && (
+      {(stats || loading.stats) && (
         <>
           <SectionTitle>System Overview</SectionTitle>
           <StatsGrid>
             <StatCard color="#007bff">
-              <StatValue>{stats.total_articles}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.total_articles || 0}</StatValue>
               <StatLabel>Total Articles</StatLabel>
             </StatCard>
             
             <StatCard color="#28a745">
-              <StatValue>{stats.total_iocs}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.total_iocs || 0}</StatValue>
               <StatLabel>Total IOCs</StatLabel>
             </StatCard>
             
             <StatCard color="#dc3545">
-              <StatValue>{stats.high_risk_iocs}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.high_risk_iocs || 0}</StatValue>
               <StatLabel>High Risk IOCs</StatLabel>
             </StatCard>
             
             <StatCard color="#ffc107">
-              <StatValue>{stats.recent_articles}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.recent_articles || 0}</StatValue>
               <StatLabel>Recent Articles (24h)</StatLabel>
             </StatCard>
           </StatsGrid>
@@ -405,21 +435,21 @@ function Dashboard() {
       </div>
 
       {/* Threat Overview */}
-      {overview && (
+      {(overview || loading.overview) && (
         <StatsGrid>
           <StatCard color="#17a2b8">
-            <StatValue>{overview.articles_with_iocs}</StatValue>
+            <StatValue>{loading.overview ? <LoadingSpinner /> : overview?.articles_with_iocs || 0}</StatValue>
             <StatLabel>Articles with IOCs</StatLabel>
-            <StatChange positive={overview.articles_with_iocs > 0}>
-              {overview.threat_detection_rate.toFixed(1)}% detection rate
+            <StatChange positive={overview?.articles_with_iocs > 0}>
+              {overview?.threat_detection_rate?.toFixed(1) || 0}% detection rate
             </StatChange>
           </StatCard>
           
           <StatCard color="#fd7e14">
-            <StatValue>{overview.total_iocs}</StatValue>
+            <StatValue>{loading.overview ? <LoadingSpinner /> : overview?.total_iocs || 0}</StatValue>
             <StatLabel>IOCs Found</StatLabel>
-            <StatChange positive={overview.total_iocs > overview.high_risk_iocs}>
-              {overview.high_risk_iocs} high risk
+            <StatChange positive={overview?.total_iocs > overview?.high_risk_iocs}>
+              {overview?.high_risk_iocs || 0} high risk
             </StatChange>
           </StatCard>
         </StatsGrid>
@@ -427,7 +457,13 @@ function Dashboard() {
 
       {/* Recent High-Risk Threats */}
       <SectionTitle>Recent High-Risk Threats</SectionTitle>
-      {threats.length === 0 ? (
+      {loading.threats ? (
+        <Card>
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <LoadingSpinner />
+          </div>
+        </Card>
+      ) : threats.length === 0 ? (
         <Card>
           <div style={{ textAlign: 'center', padding: '40px', color: '#a0a0a0' }}>
             No high-risk threats detected recently.
@@ -467,42 +503,49 @@ function Dashboard() {
       )}
 
       {/* IOC Type Distribution */}
-      {stats && stats.ioc_types && (
+      {(stats?.ioc_types || loading.stats) && (
         <>
           <SectionTitle>IOC Distribution</SectionTitle>
           <StatsGrid>
-            {Object.entries(stats.ioc_types).map(([type, count]) => (
-              <StatCard key={type} color="#6f42c1">
-                <StatValue>{count}</StatValue>
-                <StatLabel>{formatIOCType(type)}</StatLabel>
+            {loading.stats ? (
+              <StatCard color="#6f42c1">
+                <StatValue><LoadingSpinner /></StatValue>
+                <StatLabel>Loading...</StatLabel>
               </StatCard>
-            ))}
+            ) : (
+              Object.entries(stats?.ioc_types || {}).map(([type, count]) => (
+                <StatCard key={type} color="#6f42c1">
+                  <StatValue>{count}</StatValue>
+                  <StatLabel>{formatIOCType(type)}</StatLabel>
+                </StatCard>
+              ))
+            )}
           </StatsGrid>
         </>
       )}
 
       {/* Risk Level Distribution */}
-      {stats && stats.risk_distribution && (
+      {(stats?.risk_distribution || loading.stats) && (
         <>
           <SectionTitle>Risk Level Distribution</SectionTitle>
           <StatsGrid>
             <StatCard color="#28a745">
-              <StatValue>{stats.risk_distribution.low || 0}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.risk_distribution?.low || 0}</StatValue>
               <StatLabel>Low Risk</StatLabel>
             </StatCard>
             
             <StatCard color="#ffc107">
-              <StatValue>{stats.risk_distribution.medium || 0}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.risk_distribution?.medium || 0}</StatValue>
               <StatLabel>Medium Risk</StatLabel>
             </StatCard>
             
             <StatCard color="#fd7e14">
-              <StatValue>{stats.risk_distribution.high || 0}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.risk_distribution?.high || 0}</StatValue>
               <StatLabel>High Risk</StatLabel>
             </StatCard>
             
             <StatCard color="#dc3545">
-              <StatValue>{stats.risk_distribution.critical || 0}</StatValue>
+              <StatValue>{loading.stats ? <LoadingSpinner /> : stats?.risk_distribution?.critical || 0}</StatValue>
               <StatLabel>Critical Risk</StatLabel>
             </StatCard>
           </StatsGrid>
