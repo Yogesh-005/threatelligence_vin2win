@@ -7,6 +7,17 @@
 *Final Submission for Societe Generale Hackathon 2025*  
 *Team: vin2win — Yogesh P, Bharathi R*
 
+## 🚀 Live Demo
+
+**Access the deployed application:** [https://threatelligence-frontend-production.up.railway.app/](https://threatelligence-frontend-production.up.railway.app/)
+
+The live demo includes:
+- Real-time RSS feed aggregation
+- IOC extraction and enrichment
+- AI-powered threat summarization
+- Interactive dashboard with analytics
+- Full threat intelligence workflow
+
 ## Features
 
 - Automated and manual RSS feed aggregation
