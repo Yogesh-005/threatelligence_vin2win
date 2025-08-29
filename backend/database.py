@@ -9,6 +9,20 @@ load_dotenv()
 # Database URL from environment or default to SQLite
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./threat_intel.db")
 
+def ensure_ssl_in_postgres_url(url: str) -> str:
+    """Append sslmode=require to Postgres URLs if not specified.
+    Keeps SQLite and other schemes untouched.
+    """
+    try:
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        if url.startswith("postgresql://") and "sslmode=" not in url:
+            sep = "&" if "?" in url else "?"
+            return f"{url}{sep}sslmode=require"
+        return url
+    except Exception:
+        return url
+
 # Handle SQLite vs PostgreSQL
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
@@ -18,6 +32,7 @@ if DATABASE_URL.startswith("sqlite"):
     )
 else:
     # PostgreSQL configuration
+    DATABASE_URL = ensure_ssl_in_postgres_url(DATABASE_URL)
     engine = create_engine(
         DATABASE_URL,
         echo=os.getenv("DB_DEBUG", "false").lower() == "true"

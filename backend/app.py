@@ -52,12 +52,13 @@ app = FastAPI(
 )
 
 # CORS middleware
+# Allow origins from env (CORS_ORIGINS as comma-separated) or fallback to defaults
+raw_origins = os.getenv("CORS_ORIGINS") or os.getenv("FRONTEND_URL") or "http://localhost:3000"
+origins = [o.strip().rstrip('/') for o in raw_origins.split(',') if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-    "https://https://threatelligence-frontend-production.up.railway.app/",
-    "http://localhost:3000"  # for local development
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
