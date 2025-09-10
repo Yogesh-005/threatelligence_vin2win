@@ -1,5 +1,7 @@
 # Threatelligence: AI-Powered Threat Intelligence Aggregator
 
+##Overall Runner-Up! 🏆🥈
+
 ## Overview
 
 *Threatelligence* is a full-stack platform for automated cyber threat intelligence. It aggregates multiple news and research feeds, extracts and enriches indicators of compromise (IOCs), applies dynamic risk scoring, and generates AI-driven threat summaries—all accessible via a unified dashboard.
@@ -167,3 +169,4 @@ Threatelligence blends traditional threat feed aggregation with modern AI and au
 For questions or contributions, consult the API docs or repository guidelines. All code is MIT-licensed.  
 
 Happy threat hunting!
+
