@@ -20,6 +20,8 @@ The live demo includes:
 - Interactive dashboard with analytics
 - Full threat intelligence workflow
 
+**Video demo:** [Video link](https://drive.google.com/file/d/10p1M41vOElaRKQJDKGlGZe7uXNgstu6G/view?usp=sharing)
+
 ## Features
 
 - Automated and manual RSS feed aggregation
@@ -169,4 +171,5 @@ Threatelligence blends traditional threat feed aggregation with modern AI and au
 For questions or contributions, consult the API docs or repository guidelines. All code is MIT-licensed.  
 
 Happy threat hunting!
+
 
